@@ -26,3 +26,4 @@ Write-Host "Installing JDK to $env:JAVA_HOME"
 Move-Item "$tempDir/jdk/jdk-${jdkVersion}" $env:JAVA_HOME
 Write-Host "Done installing JDK to $env:JAVA_HOME"
 Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};${env:JAVA_HOME}";
+WRIte-Host "${env:PATH}"
