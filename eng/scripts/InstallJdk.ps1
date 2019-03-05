@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory = $true)]
     $JdkVersion
-    )
+)
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue' # Workaround PowerShell/PowerShell#2138
@@ -25,3 +25,4 @@ mkdir (split-path -parent $env:JAVA_HOME) -ea ignore | out-null
 Write-Host "Installing JDK to $env:JAVA_HOME"
 Move-Item "$tempDir/jdk/jdk-${jdkVersion}" $env:JAVA_HOME
 Write-Host "Done installing JDK to $env:JAVA_HOME"
+Write-Host "##vso[task.setvariable variable=PATH;]${env:PATH};${env:JAVA_HOME}";
