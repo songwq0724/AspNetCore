@@ -15,8 +15,6 @@ namespace Templates.Test.SpaTemplateTest
 
         [Fact]
         public void ReactTemplate_Works_NetCore()
-        {
-            SpaTemplateImpl("react");
-        }
+            => SpaTemplateImpl("react");
     }
 }
