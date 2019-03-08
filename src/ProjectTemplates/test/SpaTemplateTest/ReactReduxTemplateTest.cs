@@ -5,9 +5,9 @@ using Templates.Test.Infrastructure;
 using Xunit;
 using Xunit.Abstractions;
 
+[assembly: AssemblyFixture(typeof(SeleniumServerFixture))]
 namespace Templates.Test.SpaTemplateTest
 {
-    [assembly: AssemblyFixture(typeof(SeleniumServerFixture))]
     public class ReactReduxTemplateTest : SpaTemplateTestBase
     {
         public ReactReduxTemplateTest(BrowserFixture browserFixture, ITestOutputHelper output) : base(browserFixture, output)
