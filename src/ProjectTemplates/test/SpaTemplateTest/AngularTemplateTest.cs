@@ -13,7 +13,7 @@ namespace Templates.Test.SpaTemplateTest
         {
         }
 
-        [Fact(Skip = "https://github.com/aspnet/AspNetCore-Internal/issues/1854")]
+        [Fact]
         public void AngularTemplate_Works()
             => SpaTemplateImpl("angular");
     }
