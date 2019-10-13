@@ -10,13 +10,13 @@ using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
 
 namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
 {
-    public class Http2MessageBody : MessageBody
+    internal sealed class Http2MessageBody : MessageBody
     {
         private readonly Http2Stream _context;
         private ReadResult _readResult;
 
-        private Http2MessageBody(Http2Stream context, MinDataRate minRequestBodyDataRate)
-            : base(context, minRequestBodyDataRate)
+        private Http2MessageBody(Http2Stream context)
+            : base(context)
         {
             _context = context;
         }
@@ -46,14 +46,14 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
             AddAndCheckConsumedBytes(bytesRead);
         }
 
-        public static MessageBody For(Http2Stream context, MinDataRate minRequestBodyDataRate)
+        public static MessageBody For(Http2Stream context)
         {
             if (context.ReceivedEmptyRequestBody)
             {
                 return ZeroContentLengthClose;
             }
 
-            return new Http2MessageBody(context, minRequestBodyDataRate);
+            return new Http2MessageBody(context);
         }
 
         public override void AdvanceTo(SequencePosition consumed)
@@ -63,14 +63,29 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
 
         public override void AdvanceTo(SequencePosition consumed, SequencePosition examined)
         {
-            var dataLength = _readResult.Buffer.Slice(_readResult.Buffer.Start, consumed).Length;
+            OnAdvance(_readResult, consumed, examined);
             _context.RequestBodyPipe.Reader.AdvanceTo(consumed, examined);
-            OnDataRead(dataLength);
         }
 
         public override bool TryRead(out ReadResult readResult)
         {
-            return _context.RequestBodyPipe.Reader.TryRead(out readResult);
+            TryStart();
+
+            var hasResult = _context.RequestBodyPipe.Reader.TryRead(out readResult);
+
+            if (hasResult)
+            {
+                _readResult = readResult;
+
+                CountBytesRead(readResult.Buffer.Length);
+
+                if (readResult.IsCompleted)
+                {
+                    TryStop();
+                }
+            }
+
+            return hasResult;
         }
 
         public override async ValueTask<ReadResult> ReadAsync(CancellationToken cancellationToken = default)
@@ -102,11 +117,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http2
         {
             _context.RequestBodyPipe.Reader.Complete();
             _context.ReportApplicationError(exception);
-        }
-
-        public override void OnWriterCompleted(Action<Exception, object> callback, object state)
-        {
-            _context.RequestBodyPipe.Reader.OnWriterCompleted(callback, state);
         }
 
         public override void CancelPendingRead()

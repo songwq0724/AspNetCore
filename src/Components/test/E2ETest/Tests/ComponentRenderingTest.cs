@@ -11,6 +11,7 @@ using BasicTestApp;
 using BasicTestApp.HierarchicalImportsTest.Subdir;
 using Microsoft.AspNetCore.Components.E2ETest.Infrastructure;
 using Microsoft.AspNetCore.Components.E2ETest.Infrastructure.ServerFixtures;
+using Microsoft.AspNetCore.E2ETesting;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
@@ -18,7 +19,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.AspNetCore.Components.E2ETest.Tests
 {
-    public class ComponentRenderingTest : BasicTestAppTestBase
+    public class ComponentRenderingTest : ServerTestBase<ToggleExecutionModeServerFixture<Program>>
     {
         public ComponentRenderingTest(
             BrowserFixture browserFixture,
@@ -26,7 +27,11 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
             ITestOutputHelper output)
             : base(browserFixture, serverFixture, output)
         {
-            Navigate(ServerPathBase, noReload: !serverFixture.UsingAspNetHost);
+        }
+
+        protected override void InitializeAsyncCore()
+        {
+            Navigate(ServerPathBase, noReload: _serverFixture.ExecutionMode == ExecutionMode.Client);
         }
 
         [Fact]
@@ -38,7 +43,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         [Fact]
         public void CanRenderTextOnlyComponent()
         {
-            var appElement = MountTestComponent<TextOnlyComponent>();
+            var appElement = Browser.MountTestComponent<TextOnlyComponent>();
             Assert.Equal("Hello from TextOnlyComponent", appElement.Text);
         }
 
@@ -47,7 +52,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         [Fact]
         public void CanRenderComponentWithDataDash()
         {
-            var appElement = MountTestComponent<DataDashComponent>();
+            var appElement = Browser.MountTestComponent<DataDashComponent>();
             var element = appElement.FindElement(By.Id("cool_beans"));
             Assert.Equal("17", element.GetAttribute("data-tab"));
             Assert.Equal("17", element.Text);
@@ -56,7 +61,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         [Fact]
         public void CanRenderComponentWithAttributes()
         {
-            var appElement = MountTestComponent<RedTextComponent>();
+            var appElement = Browser.MountTestComponent<RedTextComponent>();
             var styledElement = appElement.FindElement(By.TagName("h1"));
             Assert.Equal("Hello, world!", styledElement.Text);
             Assert.Equal("color: red;", styledElement.GetAttribute("style"));
@@ -67,37 +72,37 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         public void CanTriggerEvents()
         {
             // Initial count is zero
-            var appElement = MountTestComponent<CounterComponent>();
+            var appElement = Browser.MountTestComponent<CounterComponent>();
             var countDisplayElement = appElement.FindElement(By.TagName("p"));
             Assert.Equal("Current count: 0", countDisplayElement.Text);
 
             // Clicking button increments count
             appElement.FindElement(By.TagName("button")).Click();
-            WaitAssert.Equal("Current count: 1", () => countDisplayElement.Text);
+            Browser.Equal("Current count: 1", () => countDisplayElement.Text);
         }
 
         [Fact]
         public void CanTriggerAsyncEventHandlers()
         {
             // Initial state is stopped
-            var appElement = MountTestComponent<AsyncEventHandlerComponent>();
+            var appElement = Browser.MountTestComponent<AsyncEventHandlerComponent>();
             var stateElement = appElement.FindElement(By.Id("state"));
             Assert.Equal("Stopped", stateElement.Text);
 
             // Clicking 'tick' changes the state, and starts a task
             appElement.FindElement(By.Id("tick")).Click();
-            WaitAssert.Equal("Started", () => stateElement.Text);
+            Browser.Equal("Started", () => stateElement.Text);
 
             // Clicking 'tock' completes the task, which updates the state
             appElement.FindElement(By.Id("tock")).Click();
-            WaitAssert.Equal("Stopped", () => stateElement.Text);
+            Browser.Equal("Stopped", () => stateElement.Text);
         }
 
         [Fact]
         public void CanTriggerKeyPressEvents()
         {
             // List is initially empty
-            var appElement = MountTestComponent<KeyPressEventComponent>();
+            var appElement = Browser.MountTestComponent<KeyPressEventComponent>();
             var inputElement = appElement.FindElement(By.TagName("input"));
             Func<IEnumerable<IWebElement>> liElements =
                 () => appElement.FindElements(By.TagName("li"));
@@ -105,12 +110,12 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
 
             // Typing adds element
             inputElement.SendKeys("a");
-            WaitAssert.Collection(liElements,
+            Browser.Collection(liElements,
                 li => Assert.Equal("a", li.Text));
 
             // Typing again adds another element
             inputElement.SendKeys("b");
-            WaitAssert.Collection(liElements,
+            Browser.Collection(liElements,
                 li => Assert.Equal("a", li.Text),
                 li => Assert.Equal("b", li.Text));
 
@@ -121,7 +126,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         [Fact]
         public void CanAddAndRemoveEventHandlersDynamically()
         {
-            var appElement = MountTestComponent<CounterComponent>();
+            var appElement = Browser.MountTestComponent<CounterComponent>();
             var countDisplayElement = appElement.FindElement(By.TagName("p"));
             var incrementButton = appElement.FindElement(By.TagName("button"));
             var toggleClickHandlerCheckbox = appElement.FindElement(By.CssSelector("[type=checkbox]"));
@@ -129,25 +134,25 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
             // Initial count is zero; clicking button increments count
             Assert.Equal("Current count: 0", countDisplayElement.Text);
             incrementButton.Click();
-            WaitAssert.Equal("Current count: 1", () => countDisplayElement.Text);
+            Browser.Equal("Current count: 1", () => countDisplayElement.Text);
 
             // We can remove an event handler
             toggleClickHandlerCheckbox.Click();
-            WaitAssert.Empty(() => appElement.FindElements(By.Id("listening-message")));
+            Browser.Empty(() => appElement.FindElements(By.Id("listening-message")));
             incrementButton.Click();
-            WaitAssert.Equal("Current count: 1", () => countDisplayElement.Text);
+            Browser.Equal("Current count: 1", () => countDisplayElement.Text);
 
             // We can add an event handler
             toggleClickHandlerCheckbox.Click();
             appElement.FindElement(By.Id("listening-message"));
             incrementButton.Click();
-            WaitAssert.Equal("Current count: 2", () => countDisplayElement.Text);
+            Browser.Equal("Current count: 2", () => countDisplayElement.Text);
         }
 
         [Fact]
         public void CanRenderChildComponents()
         {
-            var appElement = MountTestComponent<ParentChildComponent>();
+            var appElement = Browser.MountTestComponent<ParentChildComponent>();
             Assert.Equal("Parent component",
                 appElement.FindElement(By.CssSelector("fieldset > legend")).Text);
 
@@ -161,7 +166,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         [Fact]
         public void CanRenderChildContent_StaticHtmlBlock()
         {
-            var appElement = MountTestComponent<HtmlBlockChildContent>();
+            var appElement = Browser.MountTestComponent<HtmlBlockChildContent>();
             Assert.Equal("<p>Some-Static-Text</p>",
                 appElement.FindElement(By.Id("foo")).GetAttribute("innerHTML"));
         }
@@ -170,7 +175,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         [Fact]
         public void CanRenderChildContent_MixedHtmlBlock()
         {
-            var appElement = MountTestComponent<HtmlMixedChildContent>();
+            var appElement = Browser.MountTestComponent<HtmlMixedChildContent>();
 
             var one = appElement.FindElement(By.Id("one"));
             Assert.Equal("<p>Some-Static-Text</p>", one.GetAttribute("innerHTML"));
@@ -189,7 +194,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         [Fact]
         public void CanRenderChildContent_EncodedHtmlInBlock()
         {
-            var appElement = MountTestComponent<HtmlEncodedChildContent>();
+            var appElement = Browser.MountTestComponent<HtmlEncodedChildContent>();
 
             var one = appElement.FindElement(By.Id("one"));
             Assert.Equal("<p>Some-Static-Text</p>", one.GetAttribute("innerHTML"));
@@ -208,21 +213,21 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         public void CanTriggerEventsOnChildComponents()
         {
             // Counter is displayed as child component. Initial count is zero.
-            var appElement = MountTestComponent<CounterComponentWrapper>();
+            var appElement = Browser.MountTestComponent<CounterComponentWrapper>();
             var counterDisplay = appElement
                 .FindElements(By.TagName("p"))
                 .Single(element => element.Text == "Current count: 0");
 
             // Clicking increments count in child component
             appElement.FindElement(By.TagName("button")).Click();
-            WaitAssert.Equal("Current count: 1", () => counterDisplay.Text);
+            Browser.Equal("Current count: 1", () => counterDisplay.Text);
         }
 
         [Fact]
         public void ChildComponentsRerenderWhenPropertiesChanged()
         {
             // Count value is displayed in child component with initial value zero
-            var appElement = MountTestComponent<CounterComponentUsingChild>();
+            var appElement = Browser.MountTestComponent<CounterComponentUsingChild>();
             var wholeCounterElement = appElement.FindElement(By.TagName("p"));
             var messageElementInChild = wholeCounterElement.FindElement(By.ClassName("message"));
             Assert.Equal("Current count: 0", wholeCounterElement.Text);
@@ -230,14 +235,14 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
 
             // Clicking increments count in child element
             appElement.FindElement(By.TagName("button")).Click();
-            WaitAssert.Equal("1", () => messageElementInChild.Text);
+            Browser.Equal("1", () => messageElementInChild.Text);
         }
 
         [Fact]
         public void CanAddAndRemoveChildComponentsDynamically()
         {
             // Initially there are zero child components
-            var appElement = MountTestComponent<AddRemoveChildComponents>();
+            var appElement = Browser.MountTestComponent<AddRemoveChildComponents>();
             var addButton = appElement.FindElement(By.ClassName("addChild"));
             var removeButton = appElement.FindElement(By.ClassName("removeChild"));
             Func<IEnumerable<IWebElement>> childComponentWrappers = () => appElement.FindElements(By.TagName("p"));
@@ -245,20 +250,20 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
 
             // Click to add/remove some child components
             addButton.Click();
-            WaitAssert.Collection(childComponentWrappers,
+            Browser.Collection(childComponentWrappers,
                 elem => Assert.Equal("Child 1", elem.FindElement(By.ClassName("message")).Text));
 
             addButton.Click();
-            WaitAssert.Collection(childComponentWrappers,
+            Browser.Collection(childComponentWrappers,
                 elem => Assert.Equal("Child 1", elem.FindElement(By.ClassName("message")).Text),
                 elem => Assert.Equal("Child 2", elem.FindElement(By.ClassName("message")).Text));
 
             removeButton.Click();
-            WaitAssert.Collection(childComponentWrappers,
+            Browser.Collection(childComponentWrappers,
                 elem => Assert.Equal("Child 1", elem.FindElement(By.ClassName("message")).Text));
 
             addButton.Click();
-            WaitAssert.Collection(childComponentWrappers,
+            Browser.Collection(childComponentWrappers,
                 elem => Assert.Equal("Child 1", elem.FindElement(By.ClassName("message")).Text),
                 elem => Assert.Equal("Child 3", elem.FindElement(By.ClassName("message")).Text));
         }
@@ -267,7 +272,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         public void ChildComponentsNotifiedWhenPropertiesChanged()
         {
             // Child component receives notification that lets it compute a property before first render
-            var appElement = MountTestComponent<PropertiesChangedHandlerParent>();
+            var appElement = Browser.MountTestComponent<PropertiesChangedHandlerParent>();
             var suppliedValueElement = appElement.FindElement(By.ClassName("supplied"));
             var computedValueElement = appElement.FindElement(By.ClassName("computed"));
             var incrementButton = appElement.FindElement(By.TagName("button"));
@@ -276,7 +281,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
 
             // When property changes, child is renotified before rerender
             incrementButton.Click();
-            WaitAssert.Equal("You supplied: 101", () => suppliedValueElement.Text);
+            Browser.Equal("You supplied: 101", () => suppliedValueElement.Text);
             Assert.Equal("I computed: 202", computedValueElement.Text);
         }
 
@@ -284,7 +289,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         public void CanRenderFragmentsWhilePreservingSurroundingElements()
         {
             // Initially, the region isn't shown
-            var appElement = MountTestComponent<RenderFragmentToggler>();
+            var appElement = Browser.MountTestComponent<RenderFragmentToggler>();
             var originalButton = appElement.FindElement(By.TagName("button"));
             Func<IEnumerable<IWebElement>> fragmentElements = () => appElement.FindElements(By.CssSelector("p[name=fragment-element]"));
             Assert.Empty(fragmentElements());
@@ -295,11 +300,11 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
 
             // When we click the button, the region is shown
             originalButton.Click();
-            WaitAssert.Single(fragmentElements);
+            Browser.Single(fragmentElements);
 
             // The button itself was preserved, so we can click it again and see the effect
             originalButton.Click();
-            WaitAssert.Empty(fragmentElements);
+            Browser.Empty(fragmentElements);
         }
 
         [Fact]
@@ -307,7 +312,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         {
             // The component is able to compile and output these type names only because
             // of the _ViewImports.cshtml files at the same and ancestor levels
-            var appElement = MountTestComponent<ComponentUsingImports>();
+            var appElement = Browser.MountTestComponent<ComponentUsingImports>();
             Assert.Collection(appElement.FindElements(By.TagName("p")),
                 elem => Assert.Equal(typeof(Complex).FullName, elem.Text),
                 elem => Assert.Equal(typeof(AssemblyHashAlgorithm).FullName, elem.Text));
@@ -316,7 +321,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         [Fact]
         public void CanUseComponentAndStaticContentFromExternalNuGetPackage()
         {
-            var appElement = MountTestComponent<ExternalContentPackage>();
+            var appElement = Browser.MountTestComponent<ExternalContentPackage>();
 
             // NuGet packages can use JS interop features to provide
             // .NET code access to browser APIs
@@ -328,7 +333,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
             modal.SendKeys("Some value from test");
             modal.Accept();
             var promptResult = appElement.FindElement(By.TagName("strong"));
-            WaitAssert.Equal("Some value from test", () => promptResult.Text);
+            Browser.Equal("Some value from test", () => promptResult.Text);
 
             // NuGet packages can also embed entire components (themselves
             // authored as Razor files), including static content. The CSS value
@@ -341,13 +346,13 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
             var externalComponentButton = specialStyleDiv.FindElement(By.TagName("button"));
             Assert.Equal("Click me", externalComponentButton.Text);
             externalComponentButton.Click();
-            WaitAssert.Equal("It works", () => externalComponentButton.Text);
+            Browser.Equal("It works", () => externalComponentButton.Text);
         }
 
         [Fact]
         public void CanRenderSvgWithCorrectNamespace()
         {
-            var appElement = MountTestComponent<SvgComponent>();
+            var appElement = Browser.MountTestComponent<SvgComponent>();
 
             var svgElement = appElement.FindElement(By.XPath("//*[local-name()='svg' and namespace-uri()='http://www.w3.org/2000/svg']"));
             Assert.NotNull(svgElement);
@@ -357,13 +362,13 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
             Assert.Equal("10", svgCircleElement.GetAttribute("r"));
 
             appElement.FindElement(By.TagName("button")).Click();
-            WaitAssert.Equal("20", () => svgCircleElement.GetAttribute("r"));
+            Browser.Equal("20", () => svgCircleElement.GetAttribute("r"));
         }
 
         [Fact]
         public void CanRenderSvgChildComponentWithCorrectNamespace()
         {
-            var appElement = MountTestComponent<SvgWithChildComponent>();
+            var appElement = Browser.MountTestComponent<SvgWithChildComponent>();
 
             var svgElement = appElement.FindElement(By.XPath("//*[local-name()='svg' and namespace-uri()='http://www.w3.org/2000/svg']"));
             Assert.NotNull(svgElement);
@@ -375,29 +380,29 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         [Fact]
         public void LogicalElementInsertionWorksHierarchically()
         {
-            var appElement = MountTestComponent<LogicalElementInsertionCases>();
-            WaitAssert.Equal("First Second Third", () => appElement.Text);
+            var appElement = Browser.MountTestComponent<LogicalElementInsertionCases>();
+            Browser.Equal("First Second Third", () => appElement.Text);
         }
 
         [Fact]
         public void CanUseJsInteropToReferenceElements()
         {
-            var appElement = MountTestComponent<ElementRefComponent>();
+            var appElement = Browser.MountTestComponent<ElementRefComponent>();
             var inputElement = appElement.FindElement(By.Id("capturedElement"));
             var buttonElement = appElement.FindElement(By.TagName("button"));
 
             Assert.Equal(string.Empty, inputElement.GetAttribute("value"));
 
             buttonElement.Click();
-            WaitAssert.Equal("Clicks: 1", () => inputElement.GetAttribute("value"));
+            Browser.Equal("Clicks: 1", () => inputElement.GetAttribute("value"));
             buttonElement.Click();
-            WaitAssert.Equal("Clicks: 2", () => inputElement.GetAttribute("value"));
+            Browser.Equal("Clicks: 2", () => inputElement.GetAttribute("value"));
         }
 
         [Fact]
         public void CanCaptureReferencesToDynamicallyAddedElements()
         {
-            var appElement = MountTestComponent<ElementRefComponent>();
+            var appElement = Browser.MountTestComponent<ElementRefComponent>();
             var buttonElement = appElement.FindElement(By.TagName("button"));
             var checkbox = appElement.FindElement(By.CssSelector("input[type=checkbox]"));
 
@@ -407,7 +412,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
 
             // Remove the captured element
             checkbox.Click();
-            WaitAssert.Empty(() => appElement.FindElements(By.Id("capturedElement")));
+            Browser.Empty(() => appElement.FindElements(By.Id("capturedElement")));
 
             // Re-add it; observe it starts empty again
             checkbox.Click();
@@ -416,13 +421,13 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
 
             // See that the capture variable was automatically updated to reference the new instance
             buttonElement.Click();
-            WaitAssert.Equal("Clicks: 1", () => inputElement.GetAttribute("value"));
+            Browser.Equal("Clicks: 1", () => inputElement.GetAttribute("value"));
         }
 
         [Fact]
         public void CanCaptureReferencesToDynamicallyAddedComponents()
         {
-            var appElement = MountTestComponent<ComponentRefComponent>();
+            var appElement = Browser.MountTestComponent<ComponentRefComponent>();
             var incrementButtonSelector = By.CssSelector("#child-component button");
             var currentCountTextSelector = By.CssSelector("#child-component p:first-of-type");
             var resetButton = appElement.FindElement(By.Id("reset-child"));
@@ -431,37 +436,36 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
 
             // Verify the reference was captured initially
             appElement.FindElement(incrementButtonSelector).Click();
-            WaitAssert.Equal("Current count: 1", currentCountText);
+            Browser.Equal("Current count: 1", currentCountText);
             resetButton.Click();
-            WaitAssert.Equal("Current count: 0", currentCountText);
+            Browser.Equal("Current count: 0", currentCountText);
             appElement.FindElement(incrementButtonSelector).Click();
-            WaitAssert.Equal("Current count: 1", currentCountText);
+            Browser.Equal("Current count: 1", currentCountText);
 
             // Remove and re-add a new instance of the child, checking the text was reset
             toggleChildCheckbox.Click();
-            WaitAssert.Empty(() => appElement.FindElements(incrementButtonSelector));
+            Browser.Empty(() => appElement.FindElements(incrementButtonSelector));
             toggleChildCheckbox.Click();
-            WaitAssert.Equal("Current count: 0", currentCountText);
+            Browser.Equal("Current count: 0", currentCountText);
 
             // Verify we have a new working reference
             appElement.FindElement(incrementButtonSelector).Click();
-            WaitAssert.Equal("Current count: 1", currentCountText);
+            Browser.Equal("Current count: 1", currentCountText);
             resetButton.Click();
-            WaitAssert.Equal("Current count: 0", currentCountText);
+            Browser.Equal("Current count: 0", currentCountText);
         }
 
         [Fact]
         public void CanUseJsInteropForRefElementsDuringOnAfterRender()
         {
-            var appElement = MountTestComponent<AfterRenderInteropComponent>();
-            var inputElement = appElement.FindElement(By.TagName("input"));
-            Assert.Equal("Value set after render", inputElement.GetAttribute("value"));
+            var appElement = Browser.MountTestComponent<AfterRenderInteropComponent>();
+            Browser.Equal("Value set after render", () => Browser.FindElement(By.TagName("input")).GetAttribute("value"));
         }
 
         [Fact]
         public void CanRenderMarkupBlocks()
         {
-            var appElement = MountTestComponent<MarkupBlockComponent>();
+            var appElement = Browser.MountTestComponent<MarkupBlockComponent>();
 
             // Static markup
             Assert.Equal(
@@ -486,7 +490,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
 
             // Updating markup blocks
             appElement.FindElement(By.TagName("button")).Click();
-            WaitAssert.Equal(
+            Browser.Equal(
                 "[The output was changed completely.]",
                 () => appElement.FindElement(By.Id("dynamic-markup-block")).Text);
             Assert.Equal(
@@ -497,7 +501,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         [Fact]
         public void CanRenderRazorTemplates()
         {
-            var appElement = MountTestComponent<RazorTemplates>();
+            var appElement = Browser.MountTestComponent<RazorTemplates>();
 
             // code block template (component parameter)
             var element = appElement.FindElement(By.CssSelector("div#codeblocktemplate ol"));
@@ -511,7 +515,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
         [Fact]
         public void CanRenderMultipleChildContent()
         {
-            var appElement = MountTestComponent<MultipleChildContent>();
+            var appElement = Browser.MountTestComponent<MultipleChildContent>();
 
             var table = appElement.FindElement(By.TagName("table"));
 
@@ -528,7 +532,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
             var toggle = appElement.FindElement(By.Id("toggle"));
             toggle.Click();
 
-            WaitAssert.Collection(
+            Browser.Collection(
                 () => tfoot.FindElements(By.TagName("td")),
                 e => Assert.Equal("The", e.Text),
                 e => Assert.Equal("", e.Text),
@@ -542,47 +546,104 @@ namespace Microsoft.AspNetCore.Components.E2ETest.Tests
                 string.Empty,
                 Enumerable.Range(0, 100).Select(_ => "😊"));
 
-            var appElement = MountTestComponent<ConcurrentRenderParent>();
+            var appElement = Browser.MountTestComponent<ConcurrentRenderParent>();
 
             // It's supposed to pause the rendering for this long. The WaitAssert below
             // allows it to take up extra time if needed.
             await Task.Delay(1000);
 
             var outputElement = appElement.FindElement(By.Id("concurrent-render-output"));
-            WaitAssert.Equal(expectedOutput, () => outputElement.Text);
+            Browser.Equal(expectedOutput, () => outputElement.Text);
         }
 
         [Fact]
         public void CanDispatchRenderToSyncContext()
         {
-            var appElement = MountTestComponent<DispatchingComponent>();
+            var appElement = Browser.MountTestComponent<DispatchingComponent>();
             var result = appElement.FindElement(By.Id("result"));
 
             appElement.FindElement(By.Id("run-with-dispatch")).Click();
 
-            WaitAssert.Equal("Success (completed synchronously)", () => result.Text);
+            Browser.Equal("Success (completed synchronously)", () => result.Text);
         }
 
         [Fact]
         public void CanDoubleDispatchRenderToSyncContext()
         {
-            var appElement = MountTestComponent<DispatchingComponent>();
+            var appElement = Browser.MountTestComponent<DispatchingComponent>();
             var result = appElement.FindElement(By.Id("result"));
 
             appElement.FindElement(By.Id("run-with-double-dispatch")).Click();
 
-            WaitAssert.Equal("Success (completed synchronously)", () => result.Text);
+            Browser.Equal("Success (completed synchronously)", () => result.Text);
         }
 
         [Fact]
         public void CanDispatchAsyncWorkToSyncContext()
         {
-            var appElement = MountTestComponent<DispatchingComponent>();
+            var appElement = Browser.MountTestComponent<DispatchingComponent>();
             var result = appElement.FindElement(By.Id("result"));
 
             appElement.FindElement(By.Id("run-async-with-dispatch")).Click();
 
-            WaitAssert.Equal("First Second Third Fourth Fifth", () => result.Text);
+            Browser.Equal("First Second Third Fourth Fifth", () => result.Text);
+        }
+
+        [Fact]
+        public void CanPerformInteropImmediatelyOnComponentInsertion()
+        {
+            var appElement = Browser.MountTestComponent<InteropOnInitializationComponent>();
+            Browser.Equal("Hello from interop call", () => appElement.FindElement(By.Id("val-get-by-interop")).Text);
+            Browser.Equal("Hello from interop call", () => appElement.FindElement(By.Id("val-set-by-interop")).GetAttribute("value"));
+        }
+
+        [Fact]
+        public void CanUseAddMultipleAttributes()
+        {
+            var appElement = Browser.MountTestComponent<DuplicateAttributesComponent>();
+
+            var selector = By.CssSelector("#duplicate-on-element > div");
+            Browser.Exists(selector);
+
+            var element = appElement.FindElement(selector);
+            Assert.Equal(string.Empty, element.GetAttribute("bool")); // attribute is present
+            Assert.Equal("middle-value", element.GetAttribute("string"));
+            Assert.Equal("unmatched-value", element.GetAttribute("unmatched"));
+
+            selector = By.CssSelector("#duplicate-on-element-override > div");
+            element = appElement.FindElement(selector);
+            Assert.Null(element.GetAttribute("bool")); // attribute is not present
+            Assert.Equal("other-text", element.GetAttribute("string"));
+            Assert.Equal("unmatched-value", element.GetAttribute("unmatched"));
+        }
+
+        [Fact]
+        public void CanPatchRenderTreeToMatchLatestDOMState()
+        {
+            var appElement = Browser.MountTestComponent<MovingCheckboxesComponent>();
+            var incompleteItemsSelector = By.CssSelector(".incomplete-items li");
+            var completeItemsSelector = By.CssSelector(".complete-items li");
+            Browser.Exists(incompleteItemsSelector);
+
+            // Mark first item as done; observe the remaining incomplete item appears unchecked
+            // because the diff algoritm explicitly unchecks it
+            appElement.FindElement(By.CssSelector(".incomplete-items .item-isdone")).Click();
+            Browser.True(() =>
+            {
+                var incompleteLIs = appElement.FindElements(incompleteItemsSelector);
+                return incompleteLIs.Count == 1
+                    && !incompleteLIs[0].FindElement(By.CssSelector(".item-isdone")).Selected;
+            });
+
+            // Mark first done item as not done; observe the remaining complete item appears checked
+            // because the diff algoritm explicitly re-checks it
+            appElement.FindElement(By.CssSelector(".complete-items .item-isdone")).Click();
+            Browser.True(() =>
+            {
+                var completeLIs = appElement.FindElements(completeItemsSelector);
+                return completeLIs.Count == 2
+                    && completeLIs[0].FindElement(By.CssSelector(".item-isdone")).Selected;
+            });
         }
 
         static IAlert SwitchToAlert(IWebDriver driver)

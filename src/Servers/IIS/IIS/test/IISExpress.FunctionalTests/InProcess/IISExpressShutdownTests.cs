@@ -9,25 +9,23 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Server.IIS.FunctionalTests.Utilities;
 using Microsoft.AspNetCore.Server.IntegrationTesting;
 using Microsoft.AspNetCore.Server.IntegrationTesting.IIS;
-using Microsoft.AspNetCore.Testing.xunit;
+using Microsoft.AspNetCore.Testing;
 using Xunit;
 
-namespace Microsoft.AspNetCore.Server.IISIntegration.FunctionalTests
+namespace Microsoft.AspNetCore.Server.IIS.FunctionalTests
 {
     [Collection(PublishedSitesCollection.Name)]
     public class IISExpressShutdownTests : IISFunctionalTestBase
     {
-        private readonly PublishedSitesFixture _fixture;
 
-        public IISExpressShutdownTests(PublishedSitesFixture fixture)
+        public IISExpressShutdownTests(PublishedSitesFixture fixture) : base(fixture)
         {
-            _fixture = fixture;
         }
 
         [ConditionalFact]
         public async Task ServerShutsDownWhenMainExits()
         {
-            var parameters = _fixture.GetBaseDeploymentParameters();
+            var parameters = Fixture.GetBaseDeploymentParameters();
             var deploymentResult = await DeployAsync(parameters);
             try
             {
@@ -45,7 +43,7 @@ namespace Microsoft.AspNetCore.Server.IISIntegration.FunctionalTests
         [ConditionalFact]
         public async Task ServerShutsDownWhenMainExitsStress()
         {
-            var parameters = _fixture.GetBaseDeploymentParameters();
+            var parameters = Fixture.GetBaseDeploymentParameters();
             var deploymentResult = await StartAsync(parameters);
 
             var load = Helpers.StressLoad(deploymentResult.HttpClient, "/HelloWorld", response => {
@@ -69,7 +67,7 @@ namespace Microsoft.AspNetCore.Server.IISIntegration.FunctionalTests
         [ConditionalFact]
         public async Task GracefulShutdown_DoesNotCrashProcess()
         {
-            var parameters = _fixture.GetBaseDeploymentParameters();
+            var parameters = Fixture.GetBaseDeploymentParameters();
             var result = await DeployAsync(parameters);
 
             var response = await result.HttpClient.GetAsync("/HelloWorld");
@@ -80,7 +78,7 @@ namespace Microsoft.AspNetCore.Server.IISIntegration.FunctionalTests
         [ConditionalFact]
         public async Task ForcefulShutdown_DoesCrashProcess()
         {
-            var parameters = _fixture.GetBaseDeploymentParameters();
+            var parameters = Fixture.GetBaseDeploymentParameters();
             var result = await DeployAsync(parameters);
 
             var response = await result.HttpClient.GetAsync("/HelloWorld");

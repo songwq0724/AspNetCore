@@ -15,8 +15,9 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
-using Microsoft.AspNetCore.Testing.xunit;
+using Microsoft.AspNetCore.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace Microsoft.AspNetCore.Authentication.Cookies
@@ -140,20 +141,15 @@ namespace Microsoft.AspNetCore.Authentication.Cookies
         }
 
         [Fact]
-        public async Task CookieExpirationOptionIsIgnored()
+        public void SettingCookieExpirationOptionThrows()
         {
-            var server = CreateServerWithServices(s => s.AddAuthentication().AddCookie(o =>
+            var services = new ServiceCollection();
+            services.AddAuthentication().AddCookie(o =>
             {
-                o.Cookie.Name = "TestCookie";
-                // this is currently ignored. Users should set o.ExpireTimeSpan instead
                 o.Cookie.Expiration = TimeSpan.FromDays(10);
-            }), SignInAsAlice);
-
-            var transaction = await SendAsync(server, "http://example.com/testpath");
-
-            var setCookie = transaction.SetCookie;
-            Assert.StartsWith("TestCookie=", setCookie);
-            Assert.DoesNotContain("; expires=", setCookie);
+            });
+            var options = services.BuildServiceProvider().GetRequiredService<IOptionsMonitor<CookieAuthenticationOptions>>();
+            Assert.Throws<OptionsValidationException>(() => options.Get(CookieAuthenticationDefaults.AuthenticationScheme));
         }
 
         [Fact]
@@ -233,7 +229,7 @@ namespace Microsoft.AspNetCore.Authentication.Cookies
             Assert.Contains(" path=/foo", setCookie1);
             Assert.Contains(" domain=another.com", setCookie1);
             Assert.Contains(" secure", setCookie1);
-            Assert.DoesNotContain(" samesite", setCookie1);
+            Assert.Contains(" samesite=none", setCookie1);
             Assert.Contains(" httponly", setCookie1);
 
             var server2 = CreateServer(o =>
@@ -1005,7 +1001,7 @@ namespace Microsoft.AspNetCore.Authentication.Cookies
                 .Configure(app =>
                 {
                     app.UseAuthentication();
-                    app.Run(context => context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity())));
+                    app.Run(context => context.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity("whatever"))));
                 })
                 .ConfigureServices(services =>
                 {
@@ -1028,7 +1024,7 @@ namespace Microsoft.AspNetCore.Authentication.Cookies
                 .Configure(app =>
                 {
                     app.UseAuthentication();
-                    app.Run(context => context.SignInAsync("Cookie1", new ClaimsPrincipal(new ClaimsIdentity())));
+                    app.Run(context => context.SignInAsync("Cookie1", new ClaimsPrincipal(new ClaimsIdentity("whatever"))));
                 })
                 .ConfigureServices(services =>
                 {
@@ -1052,7 +1048,7 @@ namespace Microsoft.AspNetCore.Authentication.Cookies
                 {
                     app.UseAuthentication();
                     app.Map("/notlogin", signoutApp => signoutApp.Run(context => context.SignInAsync("Cookies",
-                        new ClaimsPrincipal())));
+                        new ClaimsPrincipal(new ClaimsIdentity("whatever")))));
                 })
                 .ConfigureServices(services => services.AddAuthentication().AddCookie(o => o.LoginPath = new PathString("/login")));
             var server = new TestServer(builder);
@@ -1069,7 +1065,7 @@ namespace Microsoft.AspNetCore.Authentication.Cookies
                 .Configure(app =>
                 {
                     app.UseAuthentication();
-                    app.Map("/login", signoutApp => signoutApp.Run(context => context.SignInAsync("Cookies", new ClaimsPrincipal())));
+                    app.Map("/login", signoutApp => signoutApp.Run(context => context.SignInAsync("Cookies", new ClaimsPrincipal(new ClaimsIdentity("whatever")))));
                 })
                 .ConfigureServices(services => services.AddAuthentication().AddCookie(o => o.LoginPath = new PathString("/login")));
 
@@ -1456,7 +1452,7 @@ namespace Microsoft.AspNetCore.Authentication.Cookies
                         {
                             res.StatusCode = 200;
                         }
-                        else if (req.Path == new PathString("/forbid")) // Simulate forbidden 
+                        else if (req.Path == new PathString("/forbid")) // Simulate forbidden
                         {
                             await context.ForbidAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                         }

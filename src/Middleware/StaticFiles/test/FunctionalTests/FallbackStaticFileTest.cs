@@ -35,15 +35,15 @@ namespace Microsoft.AspNetCore.StaticFiles
                 .Configure(app =>
                 {
                     var environment = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
-
-                    app.UseRouting(routes =>
+                    app.UseRouting();
+                    app.UseEndpoints(endpoints =>
                     {
-                        routes.Map("/hello", context =>
+                        endpoints.Map("/hello", context =>
                         {
                             return context.Response.WriteAsync("Hello, world!");
                         });
 
-                        routes.MapFallbackToFile("default.html", new StaticFileOptions()
+                        endpoints.MapFallbackToFile("default.html", new StaticFileOptions()
                         {
                             FileProvider = new PhysicalFileProvider(Path.Combine(environment.WebRootPath, "SubFolder")),
                         });
@@ -53,7 +53,7 @@ namespace Microsoft.AspNetCore.StaticFiles
             using (var server = builder.Start(TestUrlHelper.GetTestUrl(ServerType.Kestrel)))
             {
                 var environment = server.Services.GetRequiredService<IWebHostEnvironment>();
-                using (var client = new HttpClient { BaseAddress = new Uri(server.GetAddress()) })
+                using (var client = new HttpClient { BaseAddress = new Uri(Helpers.GetAddress(server)) })
                 {
                     var response = await client.GetAsync("hello");
                     var responseText = await response.Content.ReadAsStringAsync();
@@ -83,21 +83,22 @@ namespace Microsoft.AspNetCore.StaticFiles
                 .UseWebRoot(AppContext.BaseDirectory)
                 .Configure(app =>
                 {
-                    app.UseRouting(routes =>
+                    app.UseRouting();
+                    app.UseEndpoints(endpoints =>
                     {
-                        routes.Map("/hello", context =>
+                        endpoints.Map("/hello", context =>
                         {
                             return context.Response.WriteAsync("Hello, world!");
                         });
 
-                        routes.MapFallbackToFile("/prefix/{*path:nonfile}", "TestDocument.txt");
+                        endpoints.MapFallbackToFile("/prefix/{*path:nonfile}", "TestDocument.txt");
                     });
                 });
 
             using (var server = builder.Start(TestUrlHelper.GetTestUrl(ServerType.Kestrel)))
             {
                 var environment = server.Services.GetRequiredService<IWebHostEnvironment>();
-                using (var client = new HttpClient { BaseAddress = new Uri(server.GetAddress()) })
+                using (var client = new HttpClient { BaseAddress = new Uri(Helpers.GetAddress(server)) })
                 {
                     var response = await client.GetAsync("hello");
                     var responseText = await response.Content.ReadAsStringAsync();

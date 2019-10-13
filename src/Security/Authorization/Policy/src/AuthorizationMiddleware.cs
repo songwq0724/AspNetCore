@@ -7,34 +7,23 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization.Policy;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Endpoints;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.AspNetCore.Authorization
 {
     public class AuthorizationMiddleware
     {
-        // Property key is used by other systems, e.g. MVC, to check if authorization middleware has run
-        private const string AuthorizationMiddlewareInvokedKey = "__AuthorizationMiddlewareInvoked";
-        private static readonly object AuthorizationMiddlewareInvokedValue = new object();
+        // Property key is used by Endpoint routing to determine if Authorization has run
+        private const string AuthorizationMiddlewareInvokedWithEndpointKey = "__AuthorizationMiddlewareWithEndpointInvoked";
+        private static readonly object AuthorizationMiddlewareWithEndpointInvokedValue = new object();
 
         private readonly RequestDelegate _next;
         private readonly IAuthorizationPolicyProvider _policyProvider;
 
         public AuthorizationMiddleware(RequestDelegate next, IAuthorizationPolicyProvider policyProvider)
         {
-            if (next == null)
-            {
-                throw new ArgumentNullException(nameof(next));
-            }
-
-            if (policyProvider == null)
-            {
-                throw new ArgumentNullException(nameof(policyProvider));
-            }
-
-            _next = next;
-            _policyProvider = policyProvider;
+            _next = next ?? throw new ArgumentNullException(nameof(next));
+            _policyProvider = policyProvider ?? throw new ArgumentNullException(nameof(policyProvider));
         }
 
         public async Task Invoke(HttpContext context)
@@ -46,8 +35,12 @@ namespace Microsoft.AspNetCore.Authorization
 
             var endpoint = context.GetEndpoint();
 
-            // Flag to indicate to other systems, e.g. MVC, that authorization middleware was run for this request
-            context.Items[AuthorizationMiddlewareInvokedKey] = AuthorizationMiddlewareInvokedValue;
+            if (endpoint != null)
+            {
+                // EndpointRoutingMiddleware uses this flag to check if the Authorization middleware processed auth metadata on the endpoint.
+                // The Authorization middleware can only make this claim if it observes an actual endpoint.
+                context.Items[AuthorizationMiddlewareInvokedWithEndpointKey] = AuthorizationMiddlewareWithEndpointInvokedValue;
+            }
 
             // IMPORTANT: Changes to authorization logic should be mirrored in MVC's AuthorizeFilter
             var authorizeData = endpoint?.Metadata.GetOrderedMetadata<IAuthorizeData>() ?? Array.Empty<IAuthorizeData>();

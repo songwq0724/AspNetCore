@@ -9,35 +9,8 @@ using Microsoft.AspNetCore.Server.IntegrationTesting.IIS;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
 
-namespace Microsoft.AspNetCore.Server.IISIntegration.FunctionalTests
+namespace Microsoft.AspNetCore.Server.IIS.FunctionalTests
 {
-    public class OutOfProcessTestSiteFixture : IISTestSiteFixture
-    {
-        public OutOfProcessTestSiteFixture() : base(Configure)
-        {
-        }
-
-        private static void Configure(IISDeploymentParameters deploymentParameters)
-        {
-            deploymentParameters.ApplicationPublisher = new PublishedApplicationPublisher(Helpers.GetOutOfProcessTestSitesName());;
-            deploymentParameters.HostingModel = HostingModel.OutOfProcess;
-        }
-    }
-
-    public class OutOfProcessV1TestSiteFixture : IISTestSiteFixture
-    {
-        public OutOfProcessV1TestSiteFixture() : base(Configure)
-        {
-        }
-
-        private static void Configure(IISDeploymentParameters deploymentParameters)
-        {
-            deploymentParameters.ApplicationPublisher = new PublishedApplicationPublisher(Helpers.GetOutOfProcessTestSitesName());;
-            deploymentParameters.ApplicationPath = Helpers.GetOutOfProcessTestSitesName();
-            deploymentParameters.HostingModel = HostingModel.OutOfProcess;
-        }
-    }
-
     public class IISTestSiteFixture : IDisposable
     {
         private ApplicationDeployer _deployer;
@@ -112,7 +85,7 @@ namespace Microsoft.AspNetCore.Server.IISIntegration.FunctionalTests
             {
                 RuntimeArchitecture = RuntimeArchitecture.x64,
                 RuntimeFlavor =  RuntimeFlavor.CoreClr,
-                TargetFramework = Tfm.NetCoreApp30,
+                TargetFramework = Tfm.NetCoreApp50,
                 HostingModel = HostingModel.InProcess,
                 PublishApplicationBeforeDeployment = true,
                 ApplicationPublisher = new PublishedApplicationPublisher(Helpers.GetInProcessTestSitesName()),

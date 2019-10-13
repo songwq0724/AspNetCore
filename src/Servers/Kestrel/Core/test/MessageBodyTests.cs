@@ -20,10 +20,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
     public class MessageBodyTests
     {
         [Theory]
-        [InlineData(HttpVersion.Http10)]
-        [InlineData(HttpVersion.Http11)]
-        public async Task CanReadFromContentLength(HttpVersion httpVersion)
+        [InlineData((int)HttpVersion.Http10)]
+        [InlineData((int)HttpVersion.Http11)]
+        public async Task CanReadFromContentLength(int intHttpVersion)
         {
+            var httpVersion = (HttpVersion)intHttpVersion;
             using (var input = new TestInput())
             {
                 var body = Http1MessageBody.For(httpVersion, new HttpRequestHeaders { HeaderContentLength = "5" }, input.Http1Connection);
@@ -49,10 +50,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         }
 
         [Theory]
-        [InlineData(HttpVersion.Http10)]
-        [InlineData(HttpVersion.Http11)]
-        public async Task CanReadFromContentLengthPipeApis(HttpVersion httpVersion)
+        [InlineData((int)HttpVersion.Http10)]
+        [InlineData((int)HttpVersion.Http11)]
+        public async Task CanReadFromContentLengthPipeApis(int intHttpVersion)
         {
+            var httpVersion = (HttpVersion)intHttpVersion;
             using (var input = new TestInput())
             {
                 var body = Http1MessageBody.For(httpVersion, new HttpRequestHeaders { HeaderContentLength = "5" }, input.Http1Connection);
@@ -76,10 +78,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         }
 
         [Theory]
-        [InlineData(HttpVersion.Http10)]
-        [InlineData(HttpVersion.Http11)]
-        public async Task CanTryReadFromContentLengthPipeApis(HttpVersion httpVersion)
+        [InlineData((int)HttpVersion.Http10)]
+        [InlineData((int)HttpVersion.Http11)]
+        public async Task CanTryReadFromContentLengthPipeApis(int intHttpVersion)
         {
+            var httpVersion = (HttpVersion)intHttpVersion;
             using (var input = new TestInput())
             {
                 var body = Http1MessageBody.For(httpVersion, new HttpRequestHeaders { HeaderContentLength = "5" }, input.Http1Connection);
@@ -102,10 +105,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         }
 
         [Theory]
-        [InlineData(HttpVersion.Http10)]
-        [InlineData(HttpVersion.Http11)]
-        public async Task ReadAsyncWithoutAdvanceFromContentLengthThrows(HttpVersion httpVersion)
+        [InlineData((int)HttpVersion.Http10)]
+        [InlineData((int)HttpVersion.Http11)]
+        public async Task ReadAsyncWithoutAdvanceFromContentLengthThrows(int intHttpVersion)
         {
+            var httpVersion = (HttpVersion)intHttpVersion;
             using (var input = new TestInput())
             {
                 var body = Http1MessageBody.For(httpVersion, new HttpRequestHeaders { HeaderContentLength = "5" }, input.Http1Connection);
@@ -122,10 +126,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         }
 
         [Theory]
-        [InlineData(HttpVersion.Http10)]
-        [InlineData(HttpVersion.Http11)]
-        public async Task TryReadWithoutAdvanceFromContentLengthThrows(HttpVersion httpVersion)
+        [InlineData((int)HttpVersion.Http10)]
+        [InlineData((int)HttpVersion.Http11)]
+        public async Task TryReadWithoutAdvanceFromContentLengthThrows(int intHttpVersion)
         {
+            var httpVersion = (HttpVersion)intHttpVersion;
             using (var input = new TestInput())
             {
                 var body = Http1MessageBody.For(httpVersion, new HttpRequestHeaders { HeaderContentLength = "5" }, input.Http1Connection);
@@ -142,10 +147,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         }
 
         [Theory]
-        [InlineData(HttpVersion.Http10)]
-        [InlineData(HttpVersion.Http11)]
-        public async Task CanReadAsyncFromContentLength(HttpVersion httpVersion)
+        [InlineData((int)HttpVersion.Http10)]
+        [InlineData((int)HttpVersion.Http11)]
+        public async Task CanReadAsyncFromContentLength(int intHttpVersion)
         {
+            var httpVersion = (HttpVersion)intHttpVersion;
             using (var input = new TestInput())
             {
                 var body = Http1MessageBody.For(httpVersion, new HttpRequestHeaders { HeaderContentLength = "5" }, input.Http1Connection);
@@ -392,10 +398,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         }
 
         [Theory]
-        [InlineData(HttpVersion.Http10)]
-        [InlineData(HttpVersion.Http11)]
-        public async Task CanReadFromRemainingData(HttpVersion httpVersion)
+        [InlineData((int)HttpVersion.Http10)]
+        [InlineData((int)HttpVersion.Http11)]
+        public async Task CanReadFromRemainingData(int intHttpVersion)
         {
+            var httpVersion = (HttpVersion)intHttpVersion;
             using (var input = new TestInput())
             {
                 var body = Http1MessageBody.For(httpVersion, new HttpRequestHeaders { HeaderConnection = "upgrade" }, input.Http1Connection);
@@ -420,10 +427,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         }
 
         [Theory]
-        [InlineData(HttpVersion.Http10)]
-        [InlineData(HttpVersion.Http11)]
-        public async Task CanReadAsyncFromRemainingData(HttpVersion httpVersion)
+        [InlineData((int)HttpVersion.Http10)]
+        [InlineData((int)HttpVersion.Http11)]
+        public async Task CanReadAsyncFromRemainingData(int intHttpVersion)
         {
+            var httpVersion = (HttpVersion)intHttpVersion;
             using (var input = new TestInput())
             {
                 var body = Http1MessageBody.For(httpVersion, new HttpRequestHeaders { HeaderConnection = "upgrade" }, input.Http1Connection);
@@ -446,10 +454,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         }
 
         [Theory]
-        [InlineData(HttpVersion.Http10)]
-        [InlineData(HttpVersion.Http11)]
-        public async Task ReadFromNoContentLengthReturnsZero(HttpVersion httpVersion)
+        [InlineData((int)HttpVersion.Http10)]
+        [InlineData((int)HttpVersion.Http11)]
+        public async Task ReadFromNoContentLengthReturnsZero(int intHttpVersion)
         {
+            var httpVersion = (HttpVersion)intHttpVersion;
             using (var input = new TestInput())
             {
                 var body = Http1MessageBody.For(httpVersion, new HttpRequestHeaders(), input.Http1Connection);
@@ -470,10 +479,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         }
 
         [Theory]
-        [InlineData(HttpVersion.Http10)]
-        [InlineData(HttpVersion.Http11)]
-        public async Task ReadAsyncFromNoContentLengthReturnsZero(HttpVersion httpVersion)
+        [InlineData((int)HttpVersion.Http10)]
+        [InlineData((int)HttpVersion.Http11)]
+        public async Task ReadAsyncFromNoContentLengthReturnsZero(int intHttpVersion)
         {
+            var httpVersion = (HttpVersion)intHttpVersion;
             using (var input = new TestInput())
             {
                 var body = Http1MessageBody.For(httpVersion, new HttpRequestHeaders(), input.Http1Connection);
@@ -535,10 +545,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         }
 
         [Theory]
-        [InlineData(HttpMethod.Post)]
-        [InlineData(HttpMethod.Put)]
-        public void ForThrowsWhenMethodRequiresLengthButNoContentLengthOrTransferEncodingIsSet(HttpMethod method)
+        [InlineData((int)HttpMethod.Post)]
+        [InlineData((int)HttpMethod.Put)]
+        public void ForThrowsWhenMethodRequiresLengthButNoContentLengthOrTransferEncodingIsSet(int intMethod)
         {
+            var method = (HttpMethod)intMethod;
             using (var input = new TestInput())
             {
                 input.Http1Connection.Method = method;
@@ -551,10 +562,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
         }
 
         [Theory]
-        [InlineData(HttpMethod.Post)]
-        [InlineData(HttpMethod.Put)]
-        public void ForThrowsWhenMethodRequiresLengthButNoContentLengthSetHttp10(HttpMethod method)
+        [InlineData((int)HttpMethod.Post)]
+        [InlineData((int)HttpMethod.Put)]
+        public void ForThrowsWhenMethodRequiresLengthButNoContentLengthSetHttp10(int intMethod)
         {
+            var method = (HttpMethod)intMethod;
             using (var input = new TestInput())
             {
                 input.Http1Connection.Method = method;
@@ -778,7 +790,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
 
                 // Add some input and read it to start PumpAsync
                 input.Add("a");
-                Assert.Equal(1, (await body.ReadAsync()).Buffer.Length);
 
                 // Time out on the next read
                 input.Http1Connection.SendTimeoutResponse();
@@ -1128,8 +1139,8 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             }
         }
 
-        [Fact] // TODO
-        public async Task OnWriterCompletedForContentLengthDoesNotWork()
+        [Fact]
+        public async Task CompleteForContentLengthAllowsConsumeToWork()
         {
             using (var input = new TestInput())
             {
@@ -1137,90 +1148,18 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 var reader = new HttpRequestPipeReader();
                 reader.StartAcceptingReads(body);
 
-                input.Add("Hello");
-                var retVal = false;
-
-                // Callback isn't fired at the moment.
-                reader.OnWriterCompleted((a, b) => retVal = true, null);
-                Assert.True(reader.TryRead(out var readResult));
-
-                Assert.True(readResult.IsCompleted);
-                Assert.False(retVal);
-
-                await body.StopAsync();
-            }
-        }
-
-        [Fact]
-        public async Task OnWriterCompletedForChunkedWorks()
-        {
-            using (var input = new TestInput())
-            {
-                var body = Http1MessageBody.For(HttpVersion.Http11, new HttpRequestHeaders { HeaderTransferEncoding = "chunked" }, input.Http1Connection);
-                var reader = new HttpRequestPipeReader();
-                reader.StartAcceptingReads(body);
-
-                var tcs = new TaskCompletionSource<object>();
-                reader.OnWriterCompleted((a, b) => tcs.SetResult(null), null);
-
-                input.Add("0\r\n\r\n");
+                input.Add("a");
 
                 Assert.True(reader.TryRead(out var readResult));
 
-                Assert.True(readResult.IsCompleted);
-                Assert.Null(await tcs.Task.DefaultTimeout());
+                Assert.False(readResult.IsCompleted);
 
-                await body.StopAsync();
-            }
-        }
+                input.Add("asdf");
 
-        [Fact]
-        public async Task OnWriterCompletedForUpgradeWorks()
-        {
-            using (var input = new TestInput())
-            {
-                var body = Http1MessageBody.For(HttpVersion.Http11, new HttpRequestHeaders { HeaderConnection = "upgrade" }, input.Http1Connection);
-                var reader = new HttpRequestPipeReader();
-                reader.StartAcceptingReads(body);
-
-                var retVal = false;
-                reader.OnWriterCompleted((a, b) => retVal = true, null);
-
-                input.Add("hi");
-
-                Assert.True(reader.TryRead(out var readResult));
                 reader.AdvanceTo(readResult.Buffer.End);
+                reader.Complete();
 
-                input.Fin();
-
-                Assert.True(retVal);
-
-                await body.StopAsync();
-            }
-        }
-
-        [Fact]
-        public async Task OnWriterCompletedForNoContentLengthNoop()
-        {
-            using (var input = new TestInput())
-            {
-                var body = Http1MessageBody.For(HttpVersion.Http11, new HttpRequestHeaders(), input.Http1Connection);
-                var reader = new HttpRequestPipeReader();
-                reader.StartAcceptingReads(body);
-
-                var retVal = false;
-                reader.OnWriterCompleted((a, b) => retVal = true, null);
-
-                input.Add("hi");
-
-                Assert.True(reader.TryRead(out var readResult));
-                reader.AdvanceTo(readResult.Buffer.End);
-
-                input.Fin();
-
-                Assert.False(retVal);
-
-                await body.StopAsync();
+                await body.ConsumeAsync();
             }
         }
 
@@ -1247,6 +1186,30 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 Assert.Throws<InvalidOperationException>(() => reader.TryRead(out readResult));
 
                 await body.StopAsync();
+            }
+        }
+
+        [Fact]
+        public async Task CompleteForChunkedAllowsConsumeToWork()
+        {
+            using (var input = new TestInput())
+            {
+                var body = Http1MessageBody.For(HttpVersion.Http11, new HttpRequestHeaders { HeaderTransferEncoding = "chunked" }, input.Http1Connection);
+                var reader = new HttpRequestPipeReader();
+                reader.StartAcceptingReads(body);
+
+                input.Add("5\r\nHello\r\n");
+
+                Assert.True(reader.TryRead(out var readResult));
+
+                Assert.False(readResult.IsCompleted);
+                reader.AdvanceTo(readResult.Buffer.End);
+
+                input.Add("1\r\nH\r\n0\r\n\r\n");
+
+                reader.Complete();
+
+                await body.ConsumeAsync();
             }
         }
 
@@ -1301,7 +1264,6 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 await body.StopAsync();
             }
         }
-
 
         [Fact]
         public async Task CompleteForZeroByteBodyDoesNotCompleteConnectionPipeNoopsReads()

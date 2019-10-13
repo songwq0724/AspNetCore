@@ -11,33 +11,31 @@ using Microsoft.AspNetCore.Server.IIS.FunctionalTests.Utilities;
 using Microsoft.AspNetCore.Server.IntegrationTesting;
 using Microsoft.AspNetCore.Server.IntegrationTesting.Common;
 using Microsoft.AspNetCore.Server.IntegrationTesting.IIS;
-using Microsoft.AspNetCore.Testing.xunit;
+using Microsoft.AspNetCore.Testing;
 using Xunit;
 
-namespace Microsoft.AspNetCore.Server.IISIntegration.FunctionalTests
+namespace Microsoft.AspNetCore.Server.IIS.FunctionalTests
 {
     [Collection(PublishedSitesCollection.Name)]
     public class HttpsTests : IISFunctionalTestBase
     {
-        private readonly PublishedSitesFixture _fixture;
-
-        public HttpsTests(PublishedSitesFixture fixture)
+        public HttpsTests(PublishedSitesFixture fixture) : base(fixture)
         {
-            _fixture = fixture;
         }
 
         public static TestMatrix TestVariants
             => TestMatrix.ForServers(DeployerSelector.ServerType)
-                .WithTfms(Tfm.NetCoreApp30)
+                .WithTfms(Tfm.NetCoreApp50)
                 .WithAllApplicationTypes()
                 .WithAllHostingModels();
 
         [ConditionalTheory]
         [MemberData(nameof(TestVariants))]
+        [OSSkipCondition(OperatingSystems.Windows, WindowsVersions.Win7, WindowsVersions.Win2008R2)]
         public async Task HttpsHelloWorld(TestVariant variant)
         {
             var port = TestPortHelper.GetNextSSLPort();
-            var deploymentParameters = _fixture.GetBaseDeploymentParameters(variant);
+            var deploymentParameters = Fixture.GetBaseDeploymentParameters(variant);
             deploymentParameters.ApplicationBaseUriHint = $"https://localhost:{port}/";
             deploymentParameters.AddHttpsToServerConfig();
 
@@ -78,7 +76,7 @@ namespace Microsoft.AspNetCore.Server.IISIntegration.FunctionalTests
             var appName = "\u041C\u043E\u0451\u041F\u0440\u0438\u043B\u043E\u0436\u0435\u043D\u0438\u0435";
 
             var port = TestPortHelper.GetNextSSLPort();
-            var deploymentParameters = _fixture.GetBaseDeploymentParameters(HostingModel.InProcess);
+            var deploymentParameters = Fixture.GetBaseDeploymentParameters(HostingModel.InProcess);
             deploymentParameters.ApplicationBaseUriHint = $"https://localhost:{port}/";
             deploymentParameters.AddHttpsToServerConfig();
             deploymentParameters.AddServerConfigAction(
@@ -98,7 +96,7 @@ namespace Microsoft.AspNetCore.Server.IISIntegration.FunctionalTests
         [RequiresNewShim]
         public async Task HttpsPortCanBeOverriden()
         {
-            var deploymentParameters = _fixture.GetBaseDeploymentParameters(HostingModel.OutOfProcess);
+            var deploymentParameters = Fixture.GetBaseDeploymentParameters(HostingModel.OutOfProcess);
 
             deploymentParameters.AddServerConfigAction(
                 element => {
@@ -124,7 +122,7 @@ namespace Microsoft.AspNetCore.Server.IISIntegration.FunctionalTests
             var sslPort = GetNextSSLPort();
             var anotherSslPort = GetNextSSLPort(sslPort);
 
-            var deploymentParameters = _fixture.GetBaseDeploymentParameters(HostingModel.OutOfProcess);
+            var deploymentParameters = Fixture.GetBaseDeploymentParameters(HostingModel.OutOfProcess);
 
             deploymentParameters.AddServerConfigAction(
                 element => {

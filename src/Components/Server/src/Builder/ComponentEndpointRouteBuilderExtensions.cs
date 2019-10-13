@@ -3,7 +3,9 @@
 
 using System;
 using Microsoft.AspNetCore.Components.Server;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.SignalR;
 
 namespace Microsoft.AspNetCore.Builder
 {
@@ -13,47 +15,33 @@ namespace Microsoft.AspNetCore.Builder
     public static class ComponentEndpointRouteBuilderExtensions
     {
         /// <summary>
-        /// Maps the SignalR <see cref="ComponentHub"/> to the path <paramref name="path"/> and associates
-        /// the component <typeparamref name="TComponent"/> to this hub instance as the given DOM <paramref name="selector"/>.
+        /// Maps the Blazor <see cref="Hub" /> to the default path.
         /// </summary>
-        /// <typeparam name="TComponent">The first <see cref="IComponent"/> associated with this <see cref="ComponentHub"/>.</typeparam>
-        /// <param name="routes">The <see cref="RouteBuilder"/>.</param>
-        /// <param name="selector">The selector for the <typeparamref name="TComponent"/>.</param>
-        /// <returns>The <see cref="IEndpointConventionBuilder"/>.</returns>
-        public static IEndpointConventionBuilder MapComponentHub<TComponent>(
-            this IEndpointRouteBuilder routes,
-            string selector)
+        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/>.</param>
+        /// <returns>The <see cref="ComponentEndpointConventionBuilder"/>.</returns>
+        public static ComponentEndpointConventionBuilder MapBlazorHub(this IEndpointRouteBuilder endpoints)
         {
-            if (routes == null)
+            if (endpoints == null)
             {
-                throw new ArgumentNullException(nameof(routes));
+                throw new ArgumentNullException(nameof(endpoints));
             }
 
-            if (selector == null)
-            {
-                throw new ArgumentNullException(nameof(selector));
-            }
-
-            return routes.MapComponentHub(typeof(TComponent), selector, ComponentHub.DefaultPath);
+            return endpoints.MapBlazorHub(ComponentHub.DefaultPath);
         }
 
         /// <summary>
-        /// Maps the SignalR <see cref="ComponentHub"/> to the path <paramref name="path"/> and associates
-        /// the component <typeparamref name="TComponent"/> to this hub instance as the given DOM <paramref name="selector"/>.
+        /// Maps the Blazor <see cref="Hub" /> to the path <paramref name="path"/>.
         /// </summary>
-        /// <typeparam name="TComponent">The first <see cref="IComponent"/> associated with this <see cref="ComponentHub"/>.</typeparam>
-        /// <param name="routes">The <see cref="RouteBuilder"/>.</param>
-        /// <param name="selector">The selector for the <typeparamref name="TComponent"/>.</param>
-        /// <param name="path">The path to map to which the <see cref="ComponentHub"/> will be mapped.</param>
-        /// <returns>The <see cref="IEndpointConventionBuilder"/>.</returns>
-        public static IEndpointConventionBuilder MapComponentHub<TComponent>(
-            this IEndpointRouteBuilder routes,
-            string selector,
+        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/>.</param>
+        /// <param name="path">The path to map the Blazor <see cref="Hub" />.</param>
+        /// <returns>The <see cref="ComponentEndpointConventionBuilder"/>.</returns>
+        public static ComponentEndpointConventionBuilder MapBlazorHub(
+            this IEndpointRouteBuilder endpoints,
             string path)
         {
-            if (routes == null)
+            if (endpoints == null)
             {
-                throw new ArgumentNullException(nameof(routes));
+                throw new ArgumentNullException(nameof(endpoints));
             }
 
             if (path == null)
@@ -61,32 +49,47 @@ namespace Microsoft.AspNetCore.Builder
                 throw new ArgumentNullException(nameof(path));
             }
 
-            if (selector == null)
-            {
-                throw new ArgumentNullException(nameof(selector));
-            }
-
-            return routes.MapComponentHub(typeof(TComponent), selector, path);
+            return endpoints.MapBlazorHub(path, configureOptions: _ => { });
         }
 
         /// <summary>
-        /// Maps the SignalR <see cref="ComponentHub"/> to the path <paramref name="path"/> and associates
-        /// the component <paramref name="componentType"/> to this hub instance as the given DOM <paramref name="selector"/>.
+        ///Maps the Blazor <see cref="Hub" /> to the default path.
         /// </summary>
-        /// <param name="routes">The <see cref="RouteBuilder"/>.</param>
-        /// <param name="componentType">The first <see cref="IComponent"/> associated with this <see cref="ComponentHub"/>.</param>
-        /// <param name="selector">The selector for the <paramref name="componentType"/>.</param>
-        /// <param name="path">The path to map to which the <see cref="ComponentHub"/> will be mapped.</param>
-        /// <returns>The <see cref="IEndpointConventionBuilder"/>.</returns>
-        public static IEndpointConventionBuilder MapComponentHub(
-            this IEndpointRouteBuilder routes,
-            Type componentType,
-            string selector,
-            string path)
+        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/>.</param>
+        /// <param name="configureOptions">A callback to configure dispatcher options.</param>
+        /// <returns>The <see cref="ComponentEndpointConventionBuilder"/>.</returns>
+        public static ComponentEndpointConventionBuilder MapBlazorHub(
+            this IEndpointRouteBuilder endpoints,
+            Action<HttpConnectionDispatcherOptions> configureOptions)
         {
-            if (routes == null)
+            if (endpoints == null)
             {
-                throw new ArgumentNullException(nameof(routes));
+                throw new ArgumentNullException(nameof(endpoints));
+            }
+
+            if (configureOptions == null)
+            {
+                throw new ArgumentNullException(nameof(configureOptions));
+            }
+
+            return endpoints.MapBlazorHub(ComponentHub.DefaultPath, configureOptions);
+        }
+
+        /// <summary>
+        /// Maps the Blazor <see cref="Hub" /> to the path <paramref name="path"/>.
+        /// </summary>
+        /// <param name="endpoints">The <see cref="IEndpointRouteBuilder"/>.</param>
+        /// <param name="path">The path to map the Blazor <see cref="Hub" />.</param>
+        /// <param name="configureOptions">A callback to configure dispatcher options.</param>
+        /// <returns>The <see cref="ComponentEndpointConventionBuilder"/>.</returns>
+        public static ComponentEndpointConventionBuilder MapBlazorHub(
+            this IEndpointRouteBuilder endpoints,
+            string path,
+            Action<HttpConnectionDispatcherOptions> configureOptions)
+        {
+            if (endpoints == null)
+            {
+                throw new ArgumentNullException(nameof(endpoints));
             }
 
             if (path == null)
@@ -94,17 +97,19 @@ namespace Microsoft.AspNetCore.Builder
                 throw new ArgumentNullException(nameof(path));
             }
 
-            if (componentType == null)
+            if (configureOptions == null)
             {
-                throw new ArgumentNullException(nameof(componentType));
+                throw new ArgumentNullException(nameof(configureOptions));
             }
 
-            if (selector == null)
-            {
-                throw new ArgumentNullException(nameof(selector));
-            }
+            var hubEndpoint = endpoints.MapHub<ComponentHub>(path, configureOptions);
 
-            return routes.MapHub<ComponentHub>(path).AddComponent(componentType, selector);
+            var disconnectEndpoint = endpoints.Map(
+                (path.EndsWith("/") ? path : path + "/") + "disconnect/",
+                endpoints.CreateApplicationBuilder().UseMiddleware<CircuitDisconnectMiddleware>().Build())
+                .WithDisplayName("Blazor disconnect");
+
+            return new ComponentEndpointConventionBuilder(hubEndpoint, disconnectEndpoint);
         }
     }
 }
