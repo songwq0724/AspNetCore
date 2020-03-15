@@ -6,6 +6,7 @@
 
 import { AbortError, DefaultHttpClient, HttpClient, HttpRequest, HttpResponse, HttpTransportType, HubConnectionBuilder, IHttpConnectionOptions, JsonHubProtocol, NullLogger } from "@microsoft/signalr";
 import { MessagePackHubProtocol } from "@microsoft/signalr-protocol-msgpack";
+import { getUserAgentHeader, Platform } from "@microsoft/signalr/dist/esm/Utils";
 
 import { eachTransport, eachTransportAndProtocolAndHttpClient, ENDPOINT_BASE_HTTPS_URL, ENDPOINT_BASE_URL } from "./Common";
 import "./LogBannerReporter";
@@ -678,7 +679,6 @@ describe("hubConnection", () => {
             if (transportType !== HttpTransportType.LongPolling) {
                 it("terminates if no messages received within timeout interval", async (done) => {
                     const hubConnection = getConnectionBuilder(transportType).build();
-                    hubConnection.serverTimeoutInMilliseconds = 100;
 
                     hubConnection.onclose((error) => {
                         expect(error).toEqual(new Error("Server timeout elapsed without receiving a message from the server."));
@@ -686,6 +686,12 @@ describe("hubConnection", () => {
                     });
 
                     await hubConnection.start();
+
+                    // set this after start completes to avoid network issues with the handshake taking over 100ms and causing a failure
+                    hubConnection.serverTimeoutInMilliseconds = 1;
+
+                    // invoke a method with a response to reset the timeout using the new value
+                    await hubConnection.invoke("Echo", "");
                 });
             }
 
@@ -1090,6 +1096,33 @@ describe("hubConnection", () => {
         } catch (e) {
             fail(e);
         }
+    });
+
+    eachTransport((t) => {
+        it("sets the user agent header", async (done) => {
+            const hubConnection = getConnectionBuilder(t, TESTHUBENDPOINT_URL)
+                .withHubProtocol(new JsonHubProtocol())
+                .build();
+
+            try {
+                await hubConnection.start();
+
+                // Check to see that the Content-Type header is set the expected value
+                const [name, value] = getUserAgentHeader();
+                const headerValue = await hubConnection.invoke("GetHeader", name);
+
+                if ((t === HttpTransportType.ServerSentEvents || t === HttpTransportType.WebSockets) && !Platform.isNode) {
+                    expect(headerValue).toBeNull();
+                } else {
+                    expect(headerValue).toEqual(value);
+                }
+
+                await hubConnection.stop();
+                done();
+            } catch (e) {
+                fail(e);
+            }
+        });
     });
 
     function getJwtToken(url: string): Promise<string> {

@@ -8,11 +8,12 @@
 #define ASPNETCORE_IIS_AUTH_ENV_STR                 L"ASPNETCORE_IIS_HTTPAUTH"
 #define ASPNETCORE_IIS_WEBSOCKETS_SUPPORTED_ENV_STR L"ASPNETCORE_IIS_WEBSOCKETS_SUPPORTED"
 #define ASPNETCORE_IIS_PHYSICAL_PATH_ENV_STR        L"ASPNETCORE_IIS_PHYSICAL_PATH"
-#define ASPNETCORE_HTTPS_PORT_ENV_STR               L"ASPNETCORE_HTTPS_PORT"
+#define ASPNETCORE_ANCM_HTTPS_PORT_ENV_STR          L"ASPNETCORE_ANCM_HTTPS_PORT"
 #define ASPNETCORE_IIS_AUTH_WINDOWS                 L"windows;"
 #define ASPNETCORE_IIS_AUTH_BASIC                   L"basic;"
 #define ASPNETCORE_IIS_AUTH_ANONYMOUS               L"anonymous;"
 #define ASPNETCORE_IIS_AUTH_NONE                    L"none"
+#define ANCM_PREFER_ENVIRONMENT_VARIABLES_ENV_STR   L"ANCM_PREFER_ENVIRONMENT_VARIABLES"
 
 //
 // The key used for hash-table lookups, consists of the port on which the http process is created.

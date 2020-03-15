@@ -73,6 +73,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core
         public KestrelConfigurationLoader ConfigurationLoader { get; set; }
 
         /// <summary>
+        /// Controls whether to return the AltSvcHeader from on an HTTP/2 or lower response for HTTP/3
+        /// </summary>
+        public bool EnableAltSvc { get; set; } = false;
+
+        /// <summary>
         /// A default configuration action for all endpoints. Use for Listen, configuration, the default url, and URLs.
         /// </summary>
         private Action<ListenOptions> EndpointDefaults { get; set; } = _ => { };
@@ -91,6 +96,11 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core
         /// Has the default dev certificate load been attempted?
         /// </summary>
         internal bool IsDevCertLoaded { get; set; }
+
+        /// <summary>
+        /// Treat request headers as Latin-1 or ISO/IEC 8859-1 instead of UTF-8.
+        /// </summary>
+        internal bool Latin1RequestHeaders { get; set; }
 
         /// <summary>
         /// Specifies a configuration Action to run for each newly created endpoint. Calling this again will replace
@@ -142,8 +152,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core
                 var logger = ApplicationServices.GetRequiredService<ILogger<KestrelServer>>();
                 try
                 {
-                    var certificateManager = new CertificateManager();
-                    DefaultCertificate = certificateManager.ListCertificates(CertificatePurpose.HTTPS, StoreName.My, StoreLocation.CurrentUser, isValid: true)
+                    DefaultCertificate = CertificateManager.ListCertificates(CertificatePurpose.HTTPS, StoreName.My, StoreLocation.CurrentUser, isValid: true)
                         .FirstOrDefault();
 
                     if (DefaultCertificate != null)

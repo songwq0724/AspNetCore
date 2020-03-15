@@ -53,7 +53,7 @@ namespace Microsoft.AspNetCore.TestHost
         {
             WebSocketFeature webSocketFeature = null;
             var contextBuilder = new HttpContextBuilder(_application, AllowSynchronousIO, PreserveExecutionContext);
-            contextBuilder.Configure(context =>
+            contextBuilder.Configure((context, reader) =>
             {
                 var request = context.Request;
                 var scheme = uri.Scheme;
@@ -109,8 +109,7 @@ namespace Microsoft.AspNetCore.TestHost
         private string CreateRequestKey()
         {
             byte[] data = new byte[16];
-            var rng = RandomNumberGenerator.Create();
-            rng.GetBytes(data);
+            RandomNumberGenerator.Fill(data);
             return Convert.ToBase64String(data);
         }
 

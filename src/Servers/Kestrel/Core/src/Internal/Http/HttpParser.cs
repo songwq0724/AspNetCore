@@ -4,6 +4,7 @@
 using System;
 using System.Buffers;
 using System.Diagnostics;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure;
@@ -39,7 +40,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
             examined = buffer.End;
 
             // Prepare the first span
-            var span = buffer.First.Span;
+            var span = buffer.FirstSpan;
             var lineIndex = span.IndexOf(ByteLF);
             if (lineIndex >= 0)
             {
@@ -212,7 +213,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
                             }
 
                             // Double CRLF found, so end of headers.
-                            handler.OnHeadersComplete();
+                            handler.OnHeadersComplete(endStream: false);
                             return true;
                         }
                         else if (readAhead == 1)
@@ -240,7 +241,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http
                             {
                                 TakeSingleHeader(pHeader, length, handler);
                             }
-                            // Read the header sucessfully, skip the reader forward past the header line.
+                            // Read the header successfully, skip the reader forward past the header line.
                             reader.Advance(length);
                             span = span.Slice(length);
                         }

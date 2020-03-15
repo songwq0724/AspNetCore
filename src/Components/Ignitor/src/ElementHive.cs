@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
+#nullable enable
 namespace Ignitor
 {
     public class ElementHive
@@ -35,12 +37,12 @@ namespace Ignitor
             }
         }
 
-        public bool TryFindElementById(string id, out ElementNode element)
+        public bool TryFindElementById(string id, [NotNullWhen(true)] out ElementNode? element)
         {
             foreach (var kvp in Components)
             {
                 var component = kvp.Value;
-                if (TryGetElementFromChildren(component, out element))
+                if (TryGetElementFromChildren(component, id, out element))
                 {
                     return true;
                 }
@@ -48,31 +50,31 @@ namespace Ignitor
 
             element = null;
             return false;
+        }
 
-            bool TryGetElementFromChildren(Node node, out ElementNode foundNode)
+        bool TryGetElementFromChildren(Node node, string id, [NotNullWhen(true)] out ElementNode? foundNode)
+        {
+            if (node is ElementNode elementNode &&
+                elementNode.Attributes.TryGetValue("id", out var elementId) &&
+                elementId.ToString() == id)
             {
-                if (node is ElementNode elementNode &&
-                    elementNode.Attributes.TryGetValue("id", out var elementId) &&
-                    elementId?.ToString() == id)
-                {
-                    foundNode = elementNode;
-                    return true;
-                }
+                foundNode = elementNode;
+                return true;
+            }
 
-                if (node is ContainerNode containerNode)
+            if (node is ContainerNode containerNode)
+            {
+                for (var i = 0; i < containerNode.Children.Count; i++)
                 {
-                    for (var i = 0; i < containerNode.Children.Count; i++)
+                    if (TryGetElementFromChildren(containerNode.Children[i], id, out foundNode))
                     {
-                        if (TryGetElementFromChildren(containerNode.Children[i], out foundNode))
-                        {
-                            return true;
-                        }
+                        return true;
                     }
                 }
-
-                foundNode = null;
-                return false;
             }
+
+            foundNode = null;
+            return false;
         }
 
         private void UpdateComponent(RenderBatch batch, int componentId, ArrayBuilderSegment<RenderTreeEdit> edits)
@@ -81,6 +83,7 @@ namespace Ignitor
             {
                 component = new ComponentNode(componentId);
                 Components.Add(componentId, component);
+
             }
 
             ApplyEdits(batch, component, 0, edits);
@@ -199,7 +202,7 @@ namespace Ignitor
 
                     case RenderTreeEditType.StepOut:
                         {
-                            parent = parent.Parent;
+                            parent = parent.Parent ?? throw new InvalidOperationException($"Cannot step out of {parent}");
                             currentDepth--;
                             childIndexAtCurrentDepth = currentDepth == 0 ? childIndex : 0; // The childIndex is only ever nonzero at zero depth
                             break;
@@ -469,3 +472,4 @@ namespace Ignitor
         }
     }
 }
+#nullable restore

@@ -61,6 +61,13 @@ namespace Microsoft.AspNetCore
             var platformManifestPath = Path.Combine(_targetingPackRoot, "data", "PlatformManifest.txt");
             var expectedAssemblies = TestData.GetSharedFxDependencies()
                 .Split(';', StringSplitOptions.RemoveEmptyEntries)
+                .Select(i =>
+                {
+                    var fileName = Path.GetFileName(i);
+                    return fileName.EndsWith(".dll", StringComparison.Ordinal)
+                        ? fileName.Substring(0, fileName.Length - 4)
+                        : fileName;
+                })
                 .ToHashSet();
 
             _output.WriteLine("==== file contents ====");
@@ -82,6 +89,12 @@ namespace Microsoft.AspNetCore
                         : fileName;
                 })
                 .ToHashSet();
+
+            if (!TestData.VerifyAncmBinary())
+            {
+                actualAssemblies.Remove("aspnetcorev2_inprocess");
+                expectedAssemblies.Remove("aspnetcorev2_inprocess");
+            }
 
             var missing = expectedAssemblies.Except(actualAssemblies);
             var unexpected = actualAssemblies.Except(expectedAssemblies);

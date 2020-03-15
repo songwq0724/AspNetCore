@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>$(DefaultNetCoreTargetFramework)</TargetFramework>
@@ -20,7 +20,6 @@
     <Reference Include="Microsoft.AspNetCore.Owin" />
     <Reference Include="Microsoft.AspNetCore.Hosting" />
     <Reference Include="Microsoft.Extensions.Hosting" />
-    <Reference Include="Microsoft.Extensions.Logging.Testing" />
     <Reference Include="Microsoft.Extensions.Options" />
     <Reference Include="System.Threading.Channels" />
   </ItemGroup>

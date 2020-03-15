@@ -65,7 +65,7 @@ export interface InvocationMessage extends HubInvocationMessage {
     /** The target method arguments. */
     readonly arguments: any[];
     /** The target methods stream IDs. */
-    readonly streamIds: string[];
+    readonly streamIds?: string[];
 }
 
 /** A hub message representing a streaming invocation. */
@@ -80,7 +80,7 @@ export interface StreamInvocationMessage extends HubInvocationMessage {
     /** The target method arguments. */
     readonly arguments: any[];
     /** The target methods stream IDs. */
-    readonly streamIds: string[];
+    readonly streamIds?: string[];
 }
 
 /** A hub message representing a single item produced as part of a result stream. */
@@ -131,6 +131,9 @@ export interface CloseMessage extends HubMessageBase {
      * If this property is undefined, the connection was closed normally and without error.
      */
     readonly error?: string;
+
+    /** If true, clients with automatic reconnects enabled should attempt to reconnect after receiving the CloseMessage. Otherwise, they should not. */
+    readonly allowReconnect?: boolean;
 }
 
 /** A hub message sent to request that a streaming invocation be canceled. */

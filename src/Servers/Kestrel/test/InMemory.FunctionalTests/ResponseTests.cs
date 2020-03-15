@@ -2541,7 +2541,7 @@ namespace Microsoft.AspNetCore.Server.Kestrel.InMemory.FunctionalTests
         }
 
         [Fact]
-        [Flaky("https://github.com/aspnet/AspNetCore-Internal/issues/2408", FlakyOn.AzP.All)]
+        [QuarantinedTest]
         public async Task AppAbortViaIConnectionLifetimeFeatureIsLogged()
         {
             var testContext = new TestServiceContext(LoggerFactory);

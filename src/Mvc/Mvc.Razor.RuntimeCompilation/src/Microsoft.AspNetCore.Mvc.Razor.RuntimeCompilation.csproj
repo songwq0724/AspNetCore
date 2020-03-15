@@ -6,12 +6,13 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageTags>aspnetcore;aspnetcoremvc;razor</PackageTags>
-    <IsShippingPackage>true</IsShippingPackage>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="Microsoft.AspNetCore.Mvc.Razor.Extensions" />
     <Reference Include="Microsoft.AspNetCore.Mvc.RazorPages" />
+    <Reference Include="Microsoft.AspNetCore.Hosting.Abstractions" />
     <Reference Include="Microsoft.AspNetCore.Razor.Runtime" />
     <Reference Include="Microsoft.CodeAnalysis.Razor" />
     <Reference Include="Microsoft.Extensions.DependencyModel" />
@@ -23,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="build\$(DefaultNetCoreTargetFramework)\*" Pack="true" PackagePath="build\$(DefaultNetCoreTargetFramework)" />
+    <None Include="targets\$(PackageId).targets" Pack="true" PackagePath="build\$(DefaultNetCoreTargetFramework)\$(PackageId).targets" />
+    <None Include="targets\$(PackageId).targets" Pack="true" PackagePath="buildTransitive\$(DefaultNetCoreTargetFramework)\$(PackageId).targets" />
   </ItemGroup>
 </Project>

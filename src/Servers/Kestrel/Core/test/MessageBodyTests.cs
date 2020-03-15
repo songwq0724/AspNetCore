@@ -810,6 +810,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
             using (var input = new TestInput())
             {
                 var mockLogger = new Mock<IKestrelTrace>();
+                mockLogger
+                    .Setup(logger => logger.IsEnabled(Extensions.Logging.LogLevel.Debug))
+                    .Returns(true);
                 input.Http1Connection.ServiceContext.Log = mockLogger.Object;
                 input.Http1Connection.ConnectionIdFeature = "ConnectionId";
                 input.Http1Connection.TraceIdentifier = "RequestId";
@@ -841,6 +844,9 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 mockLogger
                     .Setup(logger => logger.RequestBodyDone("ConnectionId", "RequestId"))
                     .Callback(() => logEvent.SetResult(null));
+                mockLogger
+                    .Setup(logger => logger.IsEnabled(Extensions.Logging.LogLevel.Debug))
+                    .Returns(true);
                 input.Http1Connection.ServiceContext.Log = mockLogger.Object;
                 input.Http1Connection.ConnectionIdFeature = "ConnectionId";
                 input.Http1Connection.TraceIdentifier = "RequestId";
@@ -1184,6 +1190,56 @@ namespace Microsoft.AspNetCore.Server.Kestrel.Core.Tests
                 reader.AdvanceTo(readResult.Buffer.End);
 
                 Assert.Throws<InvalidOperationException>(() => reader.TryRead(out readResult));
+
+                await body.StopAsync();
+            }
+        }
+
+        [Fact]
+        public async Task UnexpectedEndOfRequestContentIsRepeatedlyThrownForContentLengthBody()
+        {
+            using (var input = new TestInput())
+            {
+                var body = Http1MessageBody.For(HttpVersion.Http11, new HttpRequestHeaders { HeaderContentLength = "5" }, input.Http1Connection);
+                var reader = new HttpRequestPipeReader();
+                reader.StartAcceptingReads(body);
+
+                input.Application.Output.Complete();
+
+                var ex0 = Assert.Throws<BadHttpRequestException>(() => reader.TryRead(out var readResult));
+                var ex1 = Assert.Throws<BadHttpRequestException>(() => reader.TryRead(out var readResult));
+                var ex2 = await Assert.ThrowsAsync<BadHttpRequestException>(() => reader.ReadAsync().AsTask());
+                var ex3 = await Assert.ThrowsAsync<BadHttpRequestException>(() => reader.ReadAsync().AsTask());
+
+                Assert.Equal(RequestRejectionReason.UnexpectedEndOfRequestContent, ex0.Reason);
+                Assert.Equal(RequestRejectionReason.UnexpectedEndOfRequestContent, ex1.Reason);
+                Assert.Equal(RequestRejectionReason.UnexpectedEndOfRequestContent, ex2.Reason);
+                Assert.Equal(RequestRejectionReason.UnexpectedEndOfRequestContent, ex3.Reason);
+
+                await body.StopAsync();
+            }
+        }
+
+        [Fact]
+        public async Task UnexpectedEndOfRequestContentIsRepeatedlyThrownForChunkedBody()
+        {
+            using (var input = new TestInput())
+            {
+                var body = Http1MessageBody.For(HttpVersion.Http11, new HttpRequestHeaders { HeaderTransferEncoding = "chunked" }, input.Http1Connection);
+                var reader = new HttpRequestPipeReader();
+                reader.StartAcceptingReads(body);
+
+                input.Application.Output.Complete();
+
+                var ex0 = Assert.Throws<BadHttpRequestException>(() => reader.TryRead(out var readResult));
+                var ex1 = Assert.Throws<BadHttpRequestException>(() => reader.TryRead(out var readResult));
+                var ex2 = await Assert.ThrowsAsync<BadHttpRequestException>(() => reader.ReadAsync().AsTask());
+                var ex3 = await Assert.ThrowsAsync<BadHttpRequestException>(() => reader.ReadAsync().AsTask());
+
+                Assert.Equal(RequestRejectionReason.UnexpectedEndOfRequestContent, ex0.Reason);
+                Assert.Equal(RequestRejectionReason.UnexpectedEndOfRequestContent, ex1.Reason);
+                Assert.Equal(RequestRejectionReason.UnexpectedEndOfRequestContent, ex2.Reason);
+                Assert.Equal(RequestRejectionReason.UnexpectedEndOfRequestContent, ex3.Reason);
 
                 await body.StopAsync();
             }

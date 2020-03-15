@@ -2,15 +2,11 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
-using System.Collections.Generic;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Ignitor;
 using Microsoft.AspNetCore.Components.E2ETest.Infrastructure.ServerFixtures;
-using Microsoft.AspNetCore.Components.RenderTree;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.AspNetCore.Testing;
 using Microsoft.Extensions.Logging;
 using TestServer;
 using Xunit;
@@ -18,6 +14,7 @@ using Xunit.Abstractions;
 
 namespace Microsoft.AspNetCore.Components.E2ETest.ServerExecutionTests
 {
+    [QuarantinedTest("https://github.com/dotnet/aspnetcore/issues/19666")]
     public class ComponentHubReliabilityTest : IgnitorTest<ServerStartup>
     {
         public ComponentHubReliabilityTest(BasicTestAppServerSiteFixture<ServerStartup> serverFixture, ITestOutputHelper output)
@@ -26,6 +23,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.ServerExecutionTests
         }
 
         [Fact]
+        [QuarantinedTest("https://github.com/dotnet/aspnetcore/issues/19414")]
         public async Task CannotStartMultipleCircuits()
         {
             // Arrange
@@ -216,7 +214,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.ServerExecutionTests
         {
             // Arrange
             var expectedError = "There was an unhandled exception on the current circuit, so this circuit will be terminated. " +
-                "For more details turn on detailed exceptions in 'CircuitOptions.DetailedErrors'. " +
+                "For more details turn on detailed exceptions by setting 'DetailedErrors: true' in 'appSettings.Development.json' or set 'CircuitOptions.DetailedErrors'. " +
                 "Location change to 'http://example.com' failed.";
 
             var rootUri = ServerFixture.RootUri;
@@ -245,7 +243,7 @@ namespace Microsoft.AspNetCore.Components.E2ETest.ServerExecutionTests
         {
             // Arrange
             var expectedError = "There was an unhandled exception on the current circuit, so this circuit will be terminated. " +
-                "For more details turn on detailed exceptions in 'CircuitOptions.DetailedErrors'. " +
+                "For more details turn on detailed exceptions by setting 'DetailedErrors: true' in 'appSettings.Development.json' or set 'CircuitOptions.DetailedErrors'. " +
                 "Location change failed.";
 
             var rootUri = ServerFixture.RootUri;

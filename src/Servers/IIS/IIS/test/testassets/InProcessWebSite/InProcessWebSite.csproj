@@ -9,7 +9,7 @@
 
   <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
     <TestAssetPublishProfile Include="Portable" Properties="TargetFramework=$(DefaultNetCoreTargetFramework)" />
-    <TestAssetPublishProfile Include="Standalone-x64" Properties="RuntimeIdentifier=win-x64;" />
+    <TestAssetPublishProfile Condition="'$(TargetArchitecture)' != 'arm'" Include="Standalone-x64" Properties="RuntimeIdentifier=win-x64;" />
   </ItemGroup>
 
   <ItemGroup>
@@ -23,6 +23,7 @@
     <Reference Include="Microsoft.AspNetCore.Server.IIS" />
     <Reference Include="Microsoft.AspNetCore.Server.IISIntegration" />
     <Reference Include="Microsoft.AspNetCore.Server.Kestrel" />
+    <Reference Include="Microsoft.AspNetCore.HttpsPolicy" />
     <Reference Include="Microsoft.AspNetCore.WebUtilities" />
     <Reference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" />
     <Reference Include="Microsoft.Extensions.Configuration.Json" />

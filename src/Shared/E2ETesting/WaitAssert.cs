@@ -47,6 +47,13 @@ namespace Microsoft.AspNetCore.E2ETesting
         public static IWebElement Exists(this IWebDriver driver, By finder)
             => Exists(driver, finder, default);
 
+        public static void DoesNotExist(this IWebDriver driver, By finder, TimeSpan timeout = default)
+            => WaitAssertCore(driver, () =>
+            {
+                var elements = driver.FindElements(finder);
+                Assert.Empty(elements);
+            }, timeout);
+
         public static IWebElement Exists(this IWebDriver driver, By finder, TimeSpan timeout)
             => WaitAssertCore(driver, () =>
             {
@@ -55,6 +62,12 @@ namespace Microsoft.AspNetCore.E2ETesting
                 var result = elements[0];
                 return result;
             }, timeout);
+
+        public static void Click(this IWebDriver driver, By selector)
+            => WaitAssertCore(driver, () =>
+            {
+                driver.FindElement(selector).Click();
+            });
 
         private static void WaitAssertCore(IWebDriver driver, Action assertion, TimeSpan timeout = default)
         {
@@ -94,6 +107,8 @@ namespace Microsoft.AspNetCore.E2ETesting
                 // tests running concurrently might use the DefaultTimeout in their current assertion, which is fine.
                 TestRunFailed = true;
 
+                var innerHtml = driver.FindElement(By.CssSelector(":first-child")).GetAttribute("innerHTML");
+
                 var fileId = $"{Guid.NewGuid():N}.png";
                 var screenShotPath = Path.Combine(Path.GetFullPath(E2ETestOptions.Instance.ScreenShotsPath), fileId);
                 var errors = driver.GetBrowserLogs(LogLevel.All);
@@ -102,7 +117,7 @@ namespace Microsoft.AspNetCore.E2ETesting
                 var exceptionInfo = lastException != null ? ExceptionDispatchInfo.Capture(lastException) :
                     CaptureException(() => assertion());
 
-                throw new BrowserAssertFailedException(errors, exceptionInfo.SourceException, screenShotPath);
+                throw new BrowserAssertFailedException(errors, exceptionInfo.SourceException, screenShotPath, innerHtml);
             }
 
             return result;
